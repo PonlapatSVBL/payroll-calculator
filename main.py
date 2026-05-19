@@ -5,7 +5,8 @@ import base64
 import logging
 import os
 from collections import defaultdict
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import Any, Dict, List, cast
 
 from dotenv import load_dotenv
 
@@ -19,7 +20,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("payroll_calc.log", encoding="utf-8"),
+        logging.FileHandler(f"payroll_calc_{datetime.now().strftime('%Y%m%d')}.log", encoding="utf-8"),
     ],
 )
 log = logging.getLogger(__name__)
@@ -55,8 +56,12 @@ async def fetch_databases(pool: aiomysql.Pool) -> List[str]:
                 ORDER BY list_type
                 """
             )
-            rows = await cur.fetchall()
-            return [row[0] for row in rows]
+            rows = cast(List[tuple[str, ...]], await cur.fetchall())  # type: ignore[misc]
+            dbs: List[str] = [row[0] for row in rows]
+            for extra in ("hms_focus", "hms_hr"):
+                if extra not in dbs:
+                    dbs.append(extra)
+            return dbs
 
 
 async def fetch_slips(pool: aiomysql.Pool, db: str) -> List[Dict[str, Any]]:
