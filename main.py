@@ -53,6 +53,7 @@ async def fetch_databases(pool: aiomysql.Pool) -> List[str]:
                 SELECT `code`
                 FROM hms_api.sys_list_of_value
                 WHERE list_type = 'inst_dbn'
+                AND code != 'hms_inst32'
                 ORDER BY list_type
                 """
             )
@@ -61,6 +62,7 @@ async def fetch_databases(pool: aiomysql.Pool) -> List[str]:
             for extra in ("hms_focus", "hms_hr"):
                 if extra not in dbs:
                     dbs.append(extra)
+            dbs.insert(0, "hms_inst32")
             return dbs
 
 
